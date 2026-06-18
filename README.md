@@ -12,7 +12,10 @@ Câu lõi của app: **App chỉ lập phiếu. Người giữ tay.**
 - Chấm Long/Short theo 8 tiêu chí.
 - Nếu đủ điều kiện, lập bảng nhập Limit cho `BTCUSDT`, `ETHUSDT`, `OKBUSDT`.
 - Lưu phiên gần nhất vào LocalStorage.
+- Lưu lịch sử từng ngày để so sánh 7 ngày và 30 ngày.
 - Cho người dùng tự cập nhật trạng thái: Chờ đặt, Đã đặt Limit, Đã khớp, Không khớp đã hủy, Đã TP, Đã SL.
+- Cho nhập kết quả ngày, Net PnL và ghi chú.
+- Xuất, nhập và xóa lịch sử JSON trên máy.
 
 ## App không làm gì
 
@@ -67,6 +70,49 @@ npx serve .
 
 Lưu ý: rewrite `/api/okx/*` hoạt động khi chạy qua Vercel. Khi chạy local bằng static server đơn giản, dữ liệu OKX có thể không cập nhật nếu không có proxy tương ứng.
 
+## Lịch sử và so sánh
+
+V1.1 có tab **LỊCH SỬ**. Mỗi ngày app lưu một bản ghi vào LocalStorage key `ftokx_simple_pwa_v1_history`.
+
+Thông tin lưu gồm:
+
+- Ngày và giờ lập phiếu.
+- Quyết định LONG, SHORT hoặc KHÔNG GIAO DỊCH.
+- Long score và Short score.
+- Giá BTCUSDT, ETHUSDT, OKBUSDT tại lúc lập phiếu.
+- Bảng phiếu và trạng thái thủ công.
+- Kết quả ngày, Net PnL USDT và ghi chú.
+
+Nếu cùng một ngày bấm cập nhật nhiều lần, app hỏi xác nhận trước khi ghi đè phiên hôm nay.
+
+## Kết quả ngày
+
+Dưới phiếu hôm nay có khu vực **Kết quả ngày**. Người dùng tự chọn:
+
+- Chưa chốt.
+- Không giao dịch.
+- Không khớp đã hủy.
+- Thắng cả 3.
+- Thua cả 3.
+- Kết quả hỗn hợp.
+
+Gợi ý tự điền:
+
+- Thắng cả 3: `+4.85` USDT.
+- Thua cả 3: `-3.40` USDT.
+- Không giao dịch hoặc không khớp đã hủy: `0` USDT.
+- Kết quả hỗn hợp: người dùng tự nhập.
+
+## Backup lịch sử
+
+Trong tab **LỊCH SỬ** có:
+
+- **Xuất lịch sử JSON**: tải file `ftokx-history-YYYY-MM-DD.json`.
+- **Nhập lịch sử JSON**: merge theo ngày, bản mới hơn theo `updatedAt` thắng.
+- **Xóa lịch sử**: chỉ xóa `ftokx_simple_pwa_v1_history`, không xóa phiên hôm nay.
+
+LocalStorage có thể mất nếu xóa dữ liệu trình duyệt, đổi máy, đổi profile hoặc reset PWA. Nên export lịch sử định kỳ.
+
 ## Test
 
 ```bash
@@ -108,7 +154,7 @@ npm run validate
 - Online: cập nhật dữ liệu thị trường mới.
 - Offline: chỉ mở lại shell app và xem phiên đã lưu.
 - Service worker chỉ cache shell app, không cache dữ liệu OKX.
-- Cache version: `ftokx-simple-pwa-v1.0.0`.
+- Cache version: `ftokx-simple-pwa-v1.1.0`.
 
 Nếu thấy bản cũ:
 
@@ -120,4 +166,3 @@ Nếu thấy bản cũ:
 ## Cảnh báo
 
 Đây không phải lời khuyên tài chính. App chỉ lập phiếu tham khảo để người dùng tự nhập thủ công vào OKX. Người dùng tự chịu trách nhiệm với mọi quyết định và rủi ro.
-"# FT" 

@@ -1,0 +1,23 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/okx/candles",
+      "destination": "https://www.okx.com/api/v5/market/candles"
+    },
+    {
+      "source": "/api/okx/ticker",
+      "destination": "https://www.okx.com/api/v5/market/ticker"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/service-worker.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}

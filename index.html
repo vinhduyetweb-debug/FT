@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#05080d" />
+    <meta name="description" content="FTOKX SIMPLE PWA lập phiếu OKX X5 thủ công từ dữ liệu thị trường công khai." />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>FTOKX SIMPLE PWA</title>
+  </head>
+  <body>
+    <noscript>App cần bật JavaScript để cập nhật dữ liệu và lập phiếu.</noscript>
+
+    <main class="app-shell" aria-live="polite">
+      <header class="hero-card">
+        <div class="eyebrow">X5 OKX TICKET · V1.1</div>
+        <h1>FTOKX SIMPLE PWA</h1>
+        <p class="guard-line">App chỉ lập phiếu. Người giữ tay.</p>
+        <div class="status-row">
+          <span id="networkStatus" class="pill">Đang online</span>
+          <span id="dataStatus" class="pill muted">CHƯA CẬP NHẬT DỮ LIỆU</span>
+        </div>
+      </header>
+
+      <nav class="tab-bar" aria-label="Chuyển màn hình">
+        <button id="tabTodayBtn" class="tab-btn active" type="button">HÔM NAY</button>
+        <button id="tabHistoryBtn" class="tab-btn" type="button">LỊCH SỬ</button>
+      </nav>
+
+      <section id="todayView">
+        <section class="action-card">
+          <button id="refreshBtn" class="primary-btn" type="button">
+            CẬP NHẬT DỮ LIỆU &amp; LẬP PHIẾU
+          </button>
+          <button id="clearSessionBtn" class="ghost-btn" type="button">Xóa phiên hôm nay</button>
+          <p class="install-hint">Có thể cài app ra màn hình chính. Dữ liệu thị trường cần internet. Offline chỉ xem lại phiếu đã lưu, không cập nhật được giá mới.</p>
+        </section>
+
+        <section id="messageArea" class="message-card hidden"></section>
+        <section id="ticketArea" class="ticket-area"></section>
+      </section>
+
+      <section id="historyView" class="hidden">
+        <section id="historyArea" class="history-area"></section>
+      </section>
+
+      <input id="historyImportInput" class="hidden" type="file" accept="application/json" />
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
