@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.2.1 — 2026-06-18
+## 1.2.2 — 2026-06-18
 
-- Thêm Signal Quality Pack.
+- Thêm Alert Discipline + Paper Result Pack.
 - Nâng ngưỡng lập phiếu từ 5/8 lên 6/8.
 - 5/8 chuyển thành WATCH, không lập phiếu.
 - Thêm cấp tín hiệu VALID_LONG, VALID_SHORT, STRONG_LONG, STRONG_SHORT.
@@ -13,9 +13,13 @@
 - Thêm V3.3 Safety Gate: ATR% 0.755%–3.0%, volume BTC > 0, LONG cần BTC 4H đóng xanh.
 - Thêm Luôn Online Watch Mode: tự quét mỗi 5 phút khi app mở.
 - Thêm âm thanh/rung kiểu báo động khi Watch Mode phát hiện LONG/SHORT.
+- Chuyển báo động sang một lần cho mỗi tín hiệu, không hú lặp ở các vòng quét sau.
+- Thêm Log cảnh báo một lần và nút xóa log cảnh báo.
+- Thêm Giấy thử TP/SL giả lập: giả định vào lệnh thành công tại giá Limit khi báo động và theo dõi TP/SL bằng ticker public.
+- Sửa parse volume nến OKX để V3.3 volume gate hoạt động đúng.
 - Thêm Screen Wake Lock nếu trình duyệt hỗ trợ.
-- Tăng service worker cache lên `ftokx-simple-pwa-v1.2.1`.
-- Cập nhật README và validator cho V1.2.1.
+- Tăng service worker cache lên `ftokx-simple-pwa-v1.2.2`.
+- Cập nhật README và validator cho V1.2.2.
 
 ## 1.1.0 — 2026-06-18
 

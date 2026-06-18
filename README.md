@@ -9,11 +9,13 @@ Câu lõi của app: **App chỉ lập phiếu. Người giữ tay.**
 - Lấy nến 4H đã đóng của `BTC-USDT-SWAP` và `ETH-USDT-SWAP`.
 - Lấy ticker mới của `BTC-USDT-SWAP`, `ETH-USDT-SWAP`, `OKB-USDT-SWAP`.
 - Tính EMA20, EMA50 bằng JavaScript thuần.
-- Chấm Long/Short theo 8 tiêu chí và bộ lọc chất lượng tín hiệu V1.2.1.
-- Có **Luôn Online Watch Mode**: khi app đang mở, tự quét mỗi 5 phút, giữ màn hình sáng nếu trình duyệt hỗ trợ, phát âm thanh/rung khi có tín hiệu.
+- Chấm Long/Short theo 8 tiêu chí và bộ lọc chất lượng tín hiệu V1.2.2.
+- Có **Luôn Online Watch Mode**: khi app đang mở, tự quét mỗi 5 phút, giữ màn hình sáng nếu trình duyệt hỗ trợ, phát âm thanh/rung một lần khi có tín hiệu mới.
 - Nếu đủ điều kiện, lập bảng nhập Limit cho `BTCUSDT`, `ETHUSDT`, `OKBUSDT`.
 - Lưu phiên gần nhất vào LocalStorage.
 - Lưu lịch sử từng ngày để so sánh 7 ngày và 30 ngày.
+- Ghi **Log cảnh báo một lần** để chống hú lặp.
+- Tạo **Giấy thử TP/SL giả lập** khi có cảnh báo để kiểm tra hiệu quả tín hiệu nếu người dùng chưa muốn vào lệnh thật.
 - Cho người dùng tự cập nhật trạng thái: Chờ đặt, Đã đặt Limit, Đã khớp, Không khớp đã hủy, Đã TP, Đã SL.
 - Cho nhập kết quả ngày, Net PnL và ghi chú.
 - Xuất, nhập và xóa lịch sử JSON trên máy.
@@ -27,7 +29,7 @@ Câu lõi của app: **App chỉ lập phiếu. Người giữ tay.**
 - Không hứa lợi nhuận.
 - Không đuổi giá.
 - Không có lệnh thứ 4.
-- Không gửi Telegram ở V1.2.1 và không để bất kỳ mã bí mật nào trong frontend.
+- Không gửi Telegram ở V1.2.2 và không để bất kỳ mã bí mật nào trong frontend.
 
 ## Thông số X5 cố định
 
@@ -50,11 +52,11 @@ Tổng nếu thắng cả 3: **+4.85 USDT**.
 Tổng nếu thua cả 3: **-3.40 USDT**.  
 Lỗ thực tế chạm **-4 USDT** thì dừng ngày.
 
-## Logic 4H và Signal Quality V1.2.1
+## Logic 4H và Signal Quality V1.2.2
 
 App chỉ dùng nến 4H đã đóng. Nến có timestamp + 4 giờ <= thời điểm hiện tại mới được tính.
 
-Quy tắc quyết định V1.2.1:
+Quy tắc quyết định V1.2.2:
 
 - Score 5/8 chỉ là **WATCH**: quan sát, không lập phiếu.
 - Long score >= 6 và Long - Short >= 2: có thể **LONG** nếu qua bộ lọc chất lượng.
@@ -91,14 +93,16 @@ SIGNAL_CONFIG = {
 
 ## Luôn Online Watch Mode
 
-V1.2.1 có nút **BẬT LUÔN ONLINE** dành cho điện thoại phụ. Khi bật:
+V1.2.2 có nút **BẬT LUÔN ONLINE** dành cho điện thoại phụ. Khi bật:
 
 - App tự cập nhật dữ liệu công khai mỗi 5 phút khi app còn mở.
 - App cố giữ màn hình sáng bằng Screen Wake Lock nếu trình duyệt hỗ trợ.
 - App xin quyền notification nếu trình duyệt cho phép.
 - Khi phát hiện LONG hoặc SHORT mới, app phát chuông bằng Web Audio và gọi rung bằng Vibration API nếu thiết bị hỗ trợ.
+- **Chỉ báo động một lần cho mỗi tín hiệu** theo ngày + hướng + nến 4H đã đóng. Những vòng quét 5 phút sau không hú lại cùng tín hiệu.
 - Có nút **Test chuông/rung** để kiểm tra điện thoại trước khi canh thật.
-- Có nút **Dừng báo động**. Báo động cũng tự dừng sau khoảng 2 phút để tránh hú vô hạn.
+- Có nút **Dừng báo động**. Báo động một lần cũng tự dừng sau khoảng 18 giây để giống một cuộc gọi/tin nhắn, không hú vô hạn.
+- Mỗi cảnh báo sẽ tạo **Giấy thử TP/SL giả lập**: giả định đã vào lệnh thành công tại giá Limit lúc báo động, rồi theo dõi TP/SL bằng giá last công khai ở các vòng quét sau.
 
 Giới hạn thực tế:
 
@@ -106,6 +110,21 @@ Giới hạn thực tế:
 - Nếu khóa màn hình hoặc đưa trình duyệt xuống nền, hệ điều hành có thể giảm hoặc dừng timer.
 - iPhone/iOS có thể hạn chế rung hoặc âm thanh hơn Android/Chrome.
 - Watch Mode chỉ báo tín hiệu, không đặt lệnh, không đuổi giá, không tự giao dịch.
+
+
+## Giấy thử TP/SL giả lập
+
+Khi Watch Mode báo LONG hoặc SHORT, app tự tạo một giấy thử local với 3 cặp BTCUSDT, ETHUSDT, OKBUSDT.
+
+Nguyên tắc:
+
+- Giả định vào lệnh thành công tại giá Limit lúc báo động.
+- Đây là **paper test**, không phải lệnh thật, không đọc tài khoản OKX.
+- App dùng ticker public trong các vòng quét sau để đánh dấu: đang theo dõi, đã chạm TP giả lập, hoặc đã chạm SL giả lập.
+- PnL giả lập cộng theo mức +1.45 / -1.05 cho BTC/ETH và +1.95 / -1.30 cho OKB.
+- Vì chỉ dùng giá last lúc quét, app có thể bỏ lỡ râu nến trong khoảng 5 phút. Kết quả này chỉ để đánh giá chất lượng tín hiệu, không phải báo cáo giao dịch thật.
+
+Dữ liệu giấy thử lưu trong LocalStorage key `ftokx_simple_pwa_v1_paper_tests`. Log cảnh báo lưu trong key `ftokx_simple_pwa_v1_alert_log`.
 
 ## Chạy local
 
@@ -119,7 +138,7 @@ Lưu ý: rewrite `/api/okx/*` hoạt động khi chạy qua Vercel. Khi chạy l
 
 ## Lịch sử và so sánh
 
-V1.2.1 giữ tab **LỊCH SỬ** từ V1.1. Mỗi ngày app lưu một bản ghi vào LocalStorage key `ftokx_simple_pwa_v1_history`.
+V1.2.2 giữ tab **LỊCH SỬ** từ V1.1. Mỗi ngày app lưu một bản ghi vào LocalStorage key `ftokx_simple_pwa_v1_history`.
 
 Thông tin lưu gồm:
 
@@ -160,7 +179,7 @@ Trong tab **LỊCH SỬ** có:
 
 LocalStorage có thể mất nếu xóa dữ liệu trình duyệt, đổi máy, đổi profile hoặc reset PWA. Nên export lịch sử định kỳ.
 
-## Có gì mới ở V1.2.1
+## Có gì mới ở V1.2.2
 
 - Nâng ngưỡng lập phiếu từ 5/8 lên 6/8.
 - 5/8 chuyển thành WATCH, không lập phiếu.
@@ -171,6 +190,9 @@ LocalStorage có thể mất nếu xóa dữ liệu trình duyệt, đổi máy,
 - Thêm cooldown sau ngày lỗ: phải đạt 7/8 mới lập phiếu.
 - Thêm V3.3 safety gate: BTC ATR% từ 0.755% đến 3.0%, volume BTC phải hợp lệ, LONG cần nến BTC 4H đóng xanh.
 - Thêm Luôn Online Watch Mode: tự quét 5 phút khi app mở, giữ màn hình sáng nếu hỗ trợ, phát chuông/rung khi có tín hiệu.
+- Báo động một lần cho mỗi tín hiệu, không hú lặp mỗi 5 phút.
+- Thêm Log cảnh báo một lần.
+- Thêm Giấy thử TP/SL giả lập để kiểm tra hiệu quả tín hiệu khi chưa muốn vào lệnh thật.
 - Không tăng vốn khi tín hiệu mạnh.
 
 ## Test
@@ -214,7 +236,7 @@ npm run validate
 - Online: cập nhật dữ liệu thị trường mới.
 - Offline: chỉ mở lại shell app và xem phiên đã lưu.
 - Service worker chỉ cache shell app, không cache dữ liệu OKX.
-- Cache version: `ftokx-simple-pwa-v1.2.1`.
+- Cache version: `ftokx-simple-pwa-v1.2.2`.
 
 Nếu thấy bản cũ:
 

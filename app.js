@@ -1,7 +1,9 @@
-const APP_VERSION = "1.2.1";
+const APP_VERSION = "1.2.2";
 const SESSION_KEY = "ftokx_simple_pwa_v1_session";
 const SETTINGS_KEY = "ftokx_simple_pwa_v1_settings";
 const HISTORY_KEY = "ftokx_simple_pwa_v1_history";
+const ALERT_LOG_KEY = "ftokx_simple_pwa_v1_alert_log";
+const PAPER_TESTS_KEY = "ftokx_simple_pwa_v1_paper_tests";
 const CACHE_BUSTER = () => `ts=${Date.now()}`;
 const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
 const POSITION_USDT = 50;
@@ -16,8 +18,10 @@ const STOP_DAY_LOSS = "-4";
 const CANDLES_API = "/api/okx/candles";
 const TICKER_API = "/api/okx/ticker";
 const AUTO_WATCH_INTERVAL_MS = 5 * 60 * 1000;
-const ALERT_REPEAT_MS = 2200;
-const ALERT_MAX_MS = 2 * 60 * 1000;
+const ALERT_ONCE_DURATION_MS = 18 * 1000;
+const ALERT_BURST_INTERVAL_MS = 2400;
+const ALERT_LOG_LIMIT = 60;
+const PAPER_TEST_MAX_HOURS = 24;
 
 const SIGNAL_CONFIG = {
   minTradeScore: 6,
@@ -114,7 +118,7 @@ let isWatchModeOn = false;
 let watchTimer = null;
 let wakeLock = null;
 let audioContext = null;
-let alertTimer = null;
+let alertTimers = [];
 let alertStopTimer = null;
 let lastAlertSignature = "";
 
@@ -222,6 +226,7 @@ async function runMarketUpdate(options = {}) {
 
     const analysis = analyzeMarket(btcCandles, ethCandles);
     const now = new Date();
+    updateOpenPaperTests(tickers, now);
     const session = buildSession(analysis, tickers, now);
     currentSession = session;
     saveSession(session);
@@ -230,7 +235,11 @@ async function runMarketUpdate(options = {}) {
     renderHistory();
     if (source === "auto") {
       updateWatchStatus(`Vừa quét lúc ${formatClock(now.toISOString())}. Kết quả: ${session.decision === "NO_TRADE" ? "nghỉ" : session.decision}.`);
-      maybeAlertSignal(session);
+      const createdPaperTest = maybeAlertSignal(session);
+      if (createdPaperTest) {
+        renderSession();
+        renderHistory();
+      }
     }
     return session;
   } catch (error) {
@@ -278,7 +287,8 @@ function parseCandle(row) {
     open: Number(row[1]),
     high: Number(row[2]),
     low: Number(row[3]),
-    close: Number(row[4])
+    close: Number(row[4]),
+    volume: Number(row[5])
   };
 }
 
@@ -664,6 +674,7 @@ function renderNoTrade(session, label) {
       <p>Không rõ hướng thì nghỉ. Tiền mặt cũng là một vị thế.</p>
       ${renderScoreDetails(session)}
     </section>
+    ${renderPaperTestPanel(session)}
     ${renderDayResultPanel(session)}
   `;
   bindDayResultControls();
@@ -722,6 +733,8 @@ function renderTicket(session, label) {
         ${session.orders.map((order, index) => renderFollowRow(order, index)).join("")}
       </div>
     </section>
+
+    ${renderPaperTestPanel(session)}
 
     <section class="panel">
       <h3>Thông số cố định X5</h3>
@@ -820,7 +833,7 @@ function renderScoreDetails(session) {
         <div class="metric"><span>Nến BTC đã đóng</span><strong>${escapeHtml(closedAt)}</strong></div>
       </div>
       <ul class="tech-list">
-        <li>Luật V1.2.1: 5/8 là WATCH; từ 6/8 mới lập phiếu; 7/8 là STRONG nhưng không tăng vốn.</li>
+        <li>Luật V1.2.2: 5/8 là WATCH; từ 6/8 mới lập phiếu; 7/8 là STRONG nhưng không tăng vốn.</li>
         <li>BTC close ${analysis.btc.close}, EMA20 ${analysis.btc.ema20}, EMA50 ${analysis.btc.ema50}, EMA50 slope ${escapeHtml(analysis.btc.ema50Slope)}</li>
         <li>ETH close ${analysis.eth.close}, EMA20 ${analysis.eth.ema20}, EMA50 ${analysis.eth.ema50}, EMA50 slope ${escapeHtml(analysis.eth.ema50Slope)}</li>
         <li>BTC core Long/Short: ${analysis.filters.btcLongCoreScore}/5 · ${analysis.filters.btcShortCoreScore}/5. Cần tối thiểu ${analysis.filters.btcLeadMinScore}/5 để BTC dẫn hướng.</li>
@@ -936,9 +949,6 @@ async function toggleWatchMode() {
 
 async function startWatchMode() {
   isWatchModeOn = true;
-  lastAlertSignature = currentSession && currentSession.decision !== "NO_TRADE"
-    ? buildAlertSignature(currentSession)
-    : lastAlertSignature;
   saveSettingsData({ ...loadSettingsData(), watchModeHint: true, updatedAt: new Date().toISOString() });
   await unlockAlertAudio();
   await requestNotificationPermission();
@@ -1050,45 +1060,53 @@ function updateWatchStatus(message) {
 
 function maybeAlertSignal(session) {
   if (!session || !(session.decision === "LONG" || session.decision === "SHORT")) {
-    return;
+    return false;
   }
   const signature = buildAlertSignature(session);
-  if (signature === lastAlertSignature) {
-    return;
+  if (signature === lastAlertSignature || hasAlertedSignature(signature)) {
+    return false;
   }
   lastAlertSignature = signature;
-  startSignalAlert(session);
+  const paperTest = createPaperTestFromSession(session, signature);
+  recordAlertLog(session, signature, paperTest);
+  startSignalAlert(session, paperTest);
+  return true;
 }
 
 function buildAlertSignature(session) {
   return [session.dayId, session.decision, session.analysis.closedAt, session.analysis.signalTier].join("|");
 }
 
-function startSignalAlert(session) {
+function hasAlertedSignature(signature) {
+  return loadAlertLog().some((item) => item.signature === signature);
+}
+
+function startSignalAlert(session, paperTest) {
   stopSignalAlert({ keepMessage: true });
   const direction = session.decision || "TEST";
   const tier = session.analysis && session.analysis.signalTier ? session.analysis.signalTier : "TEST_ALERT";
   const title = direction === "TEST" ? "TEST CHUÔNG/RUNG" : `CÓ TÍN HIỆU ${direction}`;
   const body = direction === "TEST"
     ? "Nếu nghe chuông hoặc máy rung là Watch Mode dùng được trên thiết bị này."
-    : `${tier}. Mở app, xem phiếu, tự nhập OKX nếu ông còn tỉnh táo và đúng luật.`;
+    : `${tier}. Đã tạo giấy thử: giả định vào lệnh thành công để theo dõi TP/SL. Mở app xem kết quả giả lập.`;
 
   showMessage(title, body, direction === "TEST" ? "" : "alert");
   notifySignal(title, body);
-  ringAndVibrate();
-  alertTimer = window.setInterval(ringAndVibrate, ALERT_REPEAT_MS);
-  alertStopTimer = window.setTimeout(() => stopSignalAlert(), ALERT_MAX_MS);
+  runSingleAlertPattern();
+  alertStopTimer = window.setTimeout(() => stopSignalAlert({ keepMessage: true }), ALERT_ONCE_DURATION_MS + 500);
 }
 
 function testSignalAlert() {
-  startSignalAlert({ decision: "TEST", analysis: { signalTier: "TEST_ALERT" } });
+  const fakeSession = {
+    decision: "TEST",
+    analysis: { signalTier: "TEST_ALERT" }
+  };
+  startSignalAlert(fakeSession, null);
 }
 
 function stopSignalAlert(options = {}) {
-  if (alertTimer) {
-    window.clearInterval(alertTimer);
-    alertTimer = null;
-  }
+  alertTimers.forEach((timerId) => window.clearTimeout(timerId));
+  alertTimers = [];
   if (alertStopTimer) {
     window.clearTimeout(alertStopTimer);
     alertStopTimer = null;
@@ -1098,6 +1116,13 @@ function stopSignalAlert(options = {}) {
   }
   if (!options.keepMessage && els.messageArea && els.messageArea.classList.contains("alert-box")) {
     hideMessage();
+  }
+}
+
+function runSingleAlertPattern() {
+  ringAndVibrate();
+  for (let delay = ALERT_BURST_INTERVAL_MS; delay < ALERT_ONCE_DURATION_MS; delay += ALERT_BURST_INTERVAL_MS) {
+    alertTimers.push(window.setTimeout(ringAndVibrate, delay));
   }
 }
 
@@ -1154,6 +1179,291 @@ function notifySignal(title, body) {
   } catch (error) {
     console.warn("Notification failed", error);
   }
+}
+
+function loadAlertLog() {
+  try {
+    const raw = localStorage.getItem(ALERT_LOG_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Cannot read alert log", error);
+    return [];
+  }
+}
+
+function saveAlertLog(log) {
+  const normalized = log
+    .filter((item) => item && item.signature && item.createdAt)
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+    .slice(0, ALERT_LOG_LIMIT);
+  localStorage.setItem(ALERT_LOG_KEY, JSON.stringify(normalized));
+}
+
+function recordAlertLog(session, signature, paperTest) {
+  const now = new Date().toISOString();
+  const entry = {
+    id: signature,
+    signature,
+    createdAt: now,
+    dayId: session.dayId,
+    decision: session.decision,
+    signalTier: session.analysis.signalTier,
+    longScore: session.analysis.longScore,
+    shortScore: session.analysis.shortScore,
+    closedAt: session.analysis.closedAt,
+    paperTestId: paperTest ? paperTest.id : ""
+  };
+  const existing = loadAlertLog().filter((item) => item.signature !== signature);
+  saveAlertLog([entry, ...existing]);
+}
+
+function clearAlertLog() {
+  if (!window.confirm("Xóa toàn bộ log cảnh báo? Giấy thử TP/SL vẫn giữ nguyên.")) {
+    return;
+  }
+  localStorage.removeItem(ALERT_LOG_KEY);
+  renderHistory();
+}
+
+function createPaperTestFromSession(session, signature) {
+  if (!session || !Array.isArray(session.orders) || session.orders.length === 0) {
+    return null;
+  }
+  const existing = getPaperTest(signature);
+  if (existing) {
+    return existing;
+  }
+  const now = new Date().toISOString();
+  const test = {
+    id: signature,
+    signature,
+    dayId: session.dayId,
+    createdAt: now,
+    updatedAt: now,
+    direction: session.decision,
+    signalTier: session.analysis.signalTier,
+    finalStatus: "OPEN",
+    note: "Giấy thử giả định vào lệnh thành công tại giá Limit khi báo động. Đây không phải lệnh thật.",
+    orders: session.orders.map((order) => ({
+      symbol: order.symbol,
+      instId: order.instId,
+      direction: order.direction,
+      entry: order.entry,
+      tp: order.tp,
+      sl: order.sl,
+      netWin: order.netWin,
+      netLoss: order.netLoss,
+      lastPrice: order.entry,
+      status: "Giả định vào lệnh thành công",
+      result: "OPEN",
+      resolvedAt: ""
+    }))
+  };
+  savePaperTests([test, ...loadPaperTests()]);
+  return test;
+}
+
+function updateOpenPaperTests(tickers, now) {
+  const tests = loadPaperTests();
+  if (tests.length === 0) {
+    return;
+  }
+  let changed = false;
+  const updatedTests = tests.map((test) => {
+    if (!test || test.finalStatus !== "OPEN") {
+      return test;
+    }
+    const ageHours = (now.getTime() - new Date(test.createdAt).getTime()) / (60 * 60 * 1000);
+    const orders = test.orders.map((order) => updatePaperOrder(order, tickers, now));
+    const openCount = orders.filter((order) => order.result === "OPEN").length;
+    const finalStatus = openCount === 0 ? "DONE" : ageHours >= PAPER_TEST_MAX_HOURS ? "EXPIRED" : "OPEN";
+    changed = true;
+    return {
+      ...test,
+      orders,
+      finalStatus,
+      updatedAt: now.toISOString()
+    };
+  });
+  if (changed) {
+    savePaperTests(updatedTests);
+  }
+}
+
+function updatePaperOrder(order, tickers, now) {
+  if (!order || order.result === "TP" || order.result === "SL") {
+    return order;
+  }
+  const last = tickers[order.instId];
+  if (!Number.isFinite(last) || last <= 0) {
+    return order;
+  }
+  const entry = Number(order.entry);
+  const tp = Number(order.tp);
+  const sl = Number(order.sl);
+  let result = "OPEN";
+  let status = "Đang theo dõi giả lập";
+  let resolvedAt = "";
+  if (order.direction === "LONG") {
+    if (last >= tp) {
+      result = "TP";
+      status = "Đã chạm TP giả lập";
+      resolvedAt = now.toISOString();
+    } else if (last <= sl) {
+      result = "SL";
+      status = "Đã chạm SL giả lập";
+      resolvedAt = now.toISOString();
+    }
+  } else if (order.direction === "SHORT") {
+    if (last <= tp) {
+      result = "TP";
+      status = "Đã chạm TP giả lập";
+      resolvedAt = now.toISOString();
+    } else if (last >= sl) {
+      result = "SL";
+      status = "Đã chạm SL giả lập";
+      resolvedAt = now.toISOString();
+    }
+  }
+  if (result === "OPEN" && Number.isFinite(entry)) {
+    status = "Giả định vào lệnh thành công";
+  }
+  const config = ORDER_CONFIG.find((item) => item.instId === order.instId);
+  return {
+    ...order,
+    lastPrice: config ? formatPrice(last, config.decimals) : String(last),
+    status,
+    result,
+    resolvedAt: resolvedAt || order.resolvedAt || ""
+  };
+}
+
+function loadPaperTests() {
+  try {
+    const raw = localStorage.getItem(PAPER_TESTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Cannot read paper tests", error);
+    return [];
+  }
+}
+
+function savePaperTests(tests) {
+  const normalized = tests
+    .filter((item) => item && item.id && Array.isArray(item.orders))
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+    .slice(0, 40);
+  localStorage.setItem(PAPER_TESTS_KEY, JSON.stringify(normalized));
+}
+
+function getPaperTest(id) {
+  return loadPaperTests().find((item) => item.id === id) || null;
+}
+
+function getPaperTestForSession(session) {
+  if (!session || !(session.decision === "LONG" || session.decision === "SHORT")) {
+    return loadPaperTests()[0] || null;
+  }
+  return getPaperTest(buildAlertSignature(session)) || loadPaperTests()[0] || null;
+}
+
+function computePaperPnl(test) {
+  if (!test || !Array.isArray(test.orders)) {
+    return 0;
+  }
+  return Number(test.orders.reduce((sum, order) => {
+    if (order.result === "TP") {
+      return sum + Number(order.netWin || 0);
+    }
+    if (order.result === "SL") {
+      return sum + Number(order.netLoss || 0);
+    }
+    return sum;
+  }, 0).toFixed(2));
+}
+
+function renderPaperTestPanel(session) {
+  const test = getPaperTestForSession(session);
+  if (!test) {
+    return "";
+  }
+  const pnl = computePaperPnl(test);
+  const openCount = test.orders.filter((order) => order.result === "OPEN").length;
+  const title = test.finalStatus === "OPEN" ? "Giấy thử TP/SL đang mở" : test.finalStatus === "EXPIRED" ? "Giấy thử đã hết hạn" : "Giấy thử đã chốt";
+  return `
+    <section class="panel paper-panel">
+      <h3>${escapeHtml(title)}</h3>
+      <p class="muted-text">Giả định vào lệnh thành công tại giá Limit lúc app báo động. Dùng để kiểm tra hiệu quả tín hiệu khi ông chưa muốn vào lệnh thật. App chỉ dùng giá last công khai mỗi lần quét, có thể bỏ lỡ râu nến.</p>
+      <div class="summary-grid">
+        <div class="metric"><span>Hướng thử</span><strong>${escapeHtml(test.direction)}</strong></div>
+        <div class="metric"><span>Trạng thái</span><strong>${escapeHtml(test.finalStatus)}</strong></div>
+        <div class="metric"><span>Còn mở</span><strong>${openCount}/${test.orders.length}</strong></div>
+        <div class="metric"><span>PnL giả lập</span><strong class="${pnl >= 0 ? "win" : "loss"}">${formatSigned(pnl)} USDT</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cặp</th>
+              <th>Trạng thái giả lập</th>
+              <th class="price">Entry</th>
+              <th class="price">Last</th>
+              <th class="price">TP</th>
+              <th class="price">SL</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${test.orders.map((order) => `
+              <tr>
+                <td>${escapeHtml(order.symbol)}</td>
+                <td>${escapeHtml(order.status)}</td>
+                <td class="price">${escapeHtml(order.entry)}</td>
+                <td class="price">${escapeHtml(order.lastPrice || order.entry)}</td>
+                <td class="price">${escapeHtml(order.tp)}</td>
+                <td class="price">${escapeHtml(order.sl)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function renderAlertLogPanel() {
+  const log = loadAlertLog().slice(0, 10);
+  const tests = loadPaperTests();
+  return `
+    <section class="panel">
+      <h3>Log cảnh báo một lần</h3>
+      <p class="muted-text">Mỗi tín hiệu LONG/SHORT chỉ báo động một lần theo ngày + hướng + nến 4H đã đóng. Những vòng quét sau không hú lại cùng tín hiệu.</p>
+      <div class="history-actions">
+        <button id="clearAlertLogBtn" class="ghost-btn danger" type="button">Xóa log cảnh báo</button>
+      </div>
+      ${log.length === 0 ? `<p class="muted-text">Chưa có cảnh báo nào.</p>` : `
+        <div class="history-list">
+          ${log.map((item) => {
+            const test = tests.find((paper) => paper.id === item.paperTestId);
+            const pnl = test ? computePaperPnl(test) : 0;
+            return `
+              <article class="history-item">
+                <div>
+                  <strong>${escapeHtml(formatDateTime(item.createdAt))}</strong>
+                  <p class="muted-text">${escapeHtml(item.decision)} · ${escapeHtml(item.signalTier)} · Long/Short ${escapeHtml(item.longScore)}/${escapeHtml(item.shortScore)}</p>
+                </div>
+                <div class="history-result">
+                  <span class="pill muted">${test ? escapeHtml(test.finalStatus) : "Đã báo"}</span>
+                  <strong class="${pnl >= 0 ? "win" : "loss"}">${formatSigned(pnl)} USDT</strong>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      `}
+    </section>
+  `;
 }
 
 function clearSession() {
@@ -1283,6 +1593,7 @@ function renderHistory() {
     </section>
     ${renderStatsPanel("7 ngày", computeStats(sorted, 7))}
     ${renderStatsPanel("30 ngày", computeStats(sorted, 30))}
+    ${renderAlertLogPanel()}
     <section class="panel">
       <h3>Danh sách ngày</h3>
       <div class="history-list">
@@ -1354,6 +1665,7 @@ function bindHistoryButtons() {
   const exportButton = document.querySelector("#exportHistoryBtn");
   const importButton = document.querySelector("#importHistoryBtn");
   const clearButton = document.querySelector("#clearHistoryBtn");
+  const clearAlertLogButton = document.querySelector("#clearAlertLogBtn");
   if (exportButton) {
     exportButton.addEventListener("click", exportHistory);
   }
@@ -1362,6 +1674,9 @@ function bindHistoryButtons() {
   }
   if (clearButton) {
     clearButton.addEventListener("click", clearHistory);
+  }
+  if (clearAlertLogButton) {
+    clearAlertLogButton.addEventListener("click", clearAlertLog);
   }
 }
 
