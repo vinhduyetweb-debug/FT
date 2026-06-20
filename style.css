@@ -604,3 +604,31 @@ textarea {
     width: 100%;
   }
 }
+
+.overnight-box,
+.warning-box {
+  border: 1px solid rgba(242, 184, 75, 0.28);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(242, 184, 75, 0.08);
+}
+
+.overnight-box p,
+.warning-box p {
+  margin: 10px 0 0;
+}
+
+.warning-box strong {
+  color: var(--gold);
+  letter-spacing: 0.08em;
+}
+
+.best-effort-card {
+  border-color: rgba(242, 184, 75, 0.6);
+  background: linear-gradient(180deg, rgba(242, 184, 75, 0.12), rgba(11, 17, 24, 0.94));
+}
+
+.morning-panel {
+  border-color: rgba(110, 231, 135, 0.26);
+  background: rgba(110, 231, 135, 0.06);
+}

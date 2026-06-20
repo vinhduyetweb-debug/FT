@@ -1,25 +1,30 @@
 # Changelog
 
-## 1.2.2 — 2026-06-18
+## 1.2.4 — 2026-06-20
 
-- Thêm Alert Discipline + Paper Result Pack.
-- Nâng ngưỡng lập phiếu từ 5/8 lên 6/8.
-- 5/8 chuyển thành WATCH, không lập phiếu.
-- Thêm cấp tín hiệu VALID_LONG, VALID_SHORT, STRONG_LONG, STRONG_SHORT.
-- Thêm bộ lọc BTC dẫn hướng tối thiểu 4/5 tiêu chí lõi.
-- Thêm vùng nhiễu sát EMA20 dưới 0.25% thì nghỉ.
-- Thêm kiểm tra độ dốc EMA50 trong 3 nến.
-- Thêm cooldown sau ngày lỗ: phải đạt 7/8 mới lập phiếu.
-- Thêm V3.3 Safety Gate: ATR% 0.755%–3.0%, volume BTC > 0, LONG cần BTC 4H đóng xanh.
-- Thêm Luôn Online Watch Mode: tự quét mỗi 5 phút khi app mở.
-- Thêm âm thanh/rung kiểu báo động khi Watch Mode phát hiện LONG/SHORT.
-- Chuyển báo động sang một lần cho mỗi tín hiệu, không hú lặp ở các vòng quét sau.
-- Thêm Log cảnh báo một lần và nút xóa log cảnh báo.
-- Thêm Giấy thử TP/SL giả lập: giả định vào lệnh thành công tại giá Limit khi báo động và theo dõi TP/SL bằng ticker public.
-- Sửa parse volume nến OKX để V3.3 volume gate hoạt động đúng.
-- Thêm Screen Wake Lock nếu trình duyệt hỗ trợ.
-- Tăng service worker cache lên `ftokx-simple-pwa-v1.2.2`.
-- Cập nhật README và validator cho V1.2.2.
+- Thêm Overnight Relaxed Mode từ 21:45 đến 23:59 theo giờ thiết bị.
+- Thêm cấp `OVERNIGHT_READY_LONG` / `OVERNIGHT_READY_SHORT` với ngưỡng nới lỏng: score >= 6/8, gap >= 2, BTC core >= 4/5, EMA20 distance >= 0.25%.
+- Thêm `BEST_EFFORT_LONG` / `BEST_EFFORT_SHORT` sau 21:45: nếu không đủ tín hiệu chuẩn, app vẫn dựng 01 phiếu tham khảo tối ưu nhất, gắn nhãn NOT_RECOMMENDED.
+- BEST_EFFORT giảm vốn còn 25 USDT/lệnh, bắt buộc TP/SL, không bắt buộc vào lệnh.
+- Thêm `NO_TRADE_LOCKED` cho hard veto: ATR ngoài vùng, volume lỗi, extreme candle hoặc cooldown sau ngày lỗ chưa đạt 8/8.
+- Thêm Morning Review copy để sáng hôm sau ghi kết quả TP/SL/Không khớp/Tự đóng.
+- Giữ no auto trade, no private API, no lệnh thứ 4.
+- Tăng service worker cache lên `ftokx-simple-pwa-v1.2.4`.
+
+## 1.2.3 — 2026-06-18
+
+- Safe Optimized Signal Config theo kết quả backtest export ngày 18/06/2026.
+- Nâng ngưỡng lập phiếu từ 6/8 lên 7/8.
+- 5/8 và 6/8 là WATCH, không lập phiếu.
+- Siết BTC dẫn hướng từ 4/5 lên 5/5 tiêu chí lõi.
+- Siết vùng nhiễu sát EMA20 từ 0.25% lên 0.4%.
+- Siết extreme candle multiplier từ 1.8 xuống 1.6.
+- Siết cooldown sau ngày lỗ: phải đạt 8/8 mới lập phiếu.
+- Siết V3.3 Safety Gate: ATR% từ 0.755%–3.0% thành 1.0%–2.0%, volume BTC > 0, LONG cần BTC 4H đóng xanh.
+- Giữ Alert Discipline + Paper Result Pack từ V1.2.2: Watch Mode 5 phút, báo động một lần, log cảnh báo, giấy thử TP/SL giả lập.
+- Không tăng vốn, không tăng đòn bẩy, không thêm lệnh thứ 4, không auto trade.
+- Tăng service worker cache lên `ftokx-simple-pwa-v1.2.3`.
+- Cập nhật README và validator cho V1.2.3.
 
 ## 1.1.0 — 2026-06-18
 

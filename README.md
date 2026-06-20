@@ -9,7 +9,7 @@ Câu lõi của app: **App chỉ lập phiếu. Người giữ tay.**
 - Lấy nến 4H đã đóng của `BTC-USDT-SWAP` và `ETH-USDT-SWAP`.
 - Lấy ticker mới của `BTC-USDT-SWAP`, `ETH-USDT-SWAP`, `OKB-USDT-SWAP`.
 - Tính EMA20, EMA50 bằng JavaScript thuần.
-- Chấm Long/Short theo 8 tiêu chí và bộ lọc chất lượng tín hiệu V1.2.2.
+- Chấm Long/Short theo 8 tiêu chí và bộ lọc chất lượng tín hiệu V1.2.4.
 - Có **Luôn Online Watch Mode**: khi app đang mở, tự quét mỗi 5 phút, giữ màn hình sáng nếu trình duyệt hỗ trợ, phát âm thanh/rung một lần khi có tín hiệu mới.
 - Nếu đủ điều kiện, lập bảng nhập Limit cho `BTCUSDT`, `ETHUSDT`, `OKBUSDT`.
 - Lưu phiên gần nhất vào LocalStorage.
@@ -29,7 +29,7 @@ Câu lõi của app: **App chỉ lập phiếu. Người giữ tay.**
 - Không hứa lợi nhuận.
 - Không đuổi giá.
 - Không có lệnh thứ 4.
-- Không gửi Telegram ở V1.2.2 và không để bất kỳ mã bí mật nào trong frontend.
+- Không gửi Telegram ở V1.2.4 và không để bất kỳ mã bí mật nào trong frontend.
 
 ## Thông số X5 cố định
 
@@ -52,57 +52,80 @@ Tổng nếu thắng cả 3: **+4.85 USDT**.
 Tổng nếu thua cả 3: **-3.40 USDT**.  
 Lỗ thực tế chạm **-4 USDT** thì dừng ngày.
 
-## Logic 4H và Signal Quality V1.2.2
+## Logic 4H và Signal Quality V1.2.4
 
 App chỉ dùng nến 4H đã đóng. Nến có timestamp + 4 giờ <= thời điểm hiện tại mới được tính.
 
-Quy tắc quyết định V1.2.2:
+Quy tắc quyết định V1.2.4 sau backtest tối ưu:
 
-- Score 5/8 chỉ là **WATCH**: quan sát, không lập phiếu.
-- Long score >= 6 và Long - Short >= 2: có thể **LONG** nếu qua bộ lọc chất lượng.
-- Short score >= 6 và Short - Long >= 2: có thể **SHORT** nếu qua bộ lọc chất lượng.
-- Score 7/8 hoặc 8/8 là **STRONG**, nhưng vẫn giữ nguyên vốn và vẫn chỉ có 3 lệnh.
-- Nếu nến BTC cực đoan, nghỉ.
-- Nếu BTC sát EMA20 dưới 0.25%, xem là vùng nhiễu và nghỉ.
-- Nếu BTC không đạt tối thiểu 4/5 tiêu chí lõi, không lập phiếu dù ETH đẹp.
-- Nếu ngày liền trước lỗ, bật cooldown: hôm nay phải đạt 7/8 mới lập phiếu.
+- Ban ngày: Score 5/8 hoặc 6/8 chỉ là **WATCH**: quan sát, không lập phiếu.
+- Ban ngày: Long score >= 7 và Long - Short >= 2: có thể **LONG** nếu qua toàn bộ bộ lọc chất lượng.
+- Ban ngày: Short score >= 7 và Short - Long >= 2: có thể **SHORT** nếu qua toàn bộ bộ lọc chất lượng.
+- Score 7/8 hoặc 8/8 là tín hiệu hợp lệ, nhưng vẫn giữ nguyên vốn và vẫn chỉ có 3 lệnh.
+- Nếu nến BTC cực đoan theo multiplier 1.6, nghỉ.
+- Nếu BTC sát EMA20 dưới 0.4%, ban ngày xem là vùng nhiễu và nghỉ.
+- Nếu BTC không đạt đủ 5/5 tiêu chí lõi, ban ngày không lập phiếu dù ETH đẹp.
+- Nếu ngày liền trước lỗ, bật cooldown: hôm nay phải đạt 8/8 mới lập phiếu.
+- BTC ATR% phải nằm trong vùng 1.0% đến 2.0%.
 - Nếu không lấy được dữ liệu công khai, app báo nghỉ và không dựng dữ liệu giả.
+
+### Overnight Relaxed Mode V1.2.4
+
+Từ **21:45 đến 23:59** theo giờ thiết bị, app bật `OVERNIGHT MODE: ON`.
+
+- Nếu Long hoặc Short đạt >= 6/8, gap >= 2, BTC core theo hướng đó >= 4/5, khoảng cách EMA20 >= 0.25%, ATR/Volume hợp lệ và không có cooldown, app cấp `OVERNIGHT_READY_LONG` hoặc `OVERNIGHT_READY_SHORT`.
+- Nếu sau 21:45 vẫn chưa đủ `OVERNIGHT_READY`, app vẫn dựng 01 **BEST_EFFORT OVERNIGHT TICKET** theo hướng ít xấu nhất.
+- BEST_EFFORT luôn gắn nhãn **NOT_RECOMMENDED**, giảm vị thế còn 25 USDT/lệnh, bắt buộc TP/SL, ưu tiên Limit và người dùng có quyền bỏ qua.
+- Nếu có hard veto như ATR ngoài vùng, volume lỗi, extreme candle hoặc cooldown sau ngày lỗ chưa đạt 8/8, app trả `NO_TRADE_LOCKED` và không dựng phiếu.
+- Sau ngày lỗ: không dùng Overnight/Best Effort để gỡ. Chỉ nhận kèo 8/8.
 
 Cấu hình tín hiệu chính:
 
 ```js
 SIGNAL_CONFIG = {
-  minTradeScore: 6,
+  minTradeScore: 7,
   watchScore: 5,
   minScoreGap: 2,
   strongScore: 7,
-  extremeRangeMultiplier: 1.8,
+  extremeRangeMultiplier: 1.6,
   ema50SlopeLookback: 3,
-  minDistanceFromEma20: 0.0025,
+  minDistanceFromEma20: 0.004,
   btcMustLead: true,
-  btcLeadMinScore: 4,
+  btcLeadMinScore: 5,
   lossCooldownEnabled: true,
-  lossCooldownMinScore: 7,
-  atrPctMin: 0.00755,
-  atrPctMax: 0.03,
+  lossCooldownMinScore: 8,
+  atrPctMin: 0.01,
+  atrPctMax: 0.02,
   requireVolumePositive: true,
   longRequireGreenCandle: true
+}
+
+OVERNIGHT_CONFIG = {
+  startHour: 21,
+  startMinute: 45,
+  endHour: 23,
+  endMinute: 59,
+  minTradeScore: 6,
+  minScoreGap: 2,
+  btcLeadMinScore: 4,
+  minDistanceFromEma20: 0.0025,
+  bestEffortPositionRatio: 0.5
 }
 ```
 
 
 ## Luôn Online Watch Mode
 
-V1.2.2 có nút **BẬT LUÔN ONLINE** dành cho điện thoại phụ. Khi bật:
+V1.2.4 có nút **BẬT LUÔN ONLINE** dành cho điện thoại phụ. Khi bật:
 
 - App tự cập nhật dữ liệu công khai mỗi 5 phút khi app còn mở.
 - App cố giữ màn hình sáng bằng Screen Wake Lock nếu trình duyệt hỗ trợ.
 - App xin quyền notification nếu trình duyệt cho phép.
-- Khi phát hiện LONG hoặc SHORT mới, app phát chuông bằng Web Audio và gọi rung bằng Vibration API nếu thiết bị hỗ trợ.
+- Khi phát hiện LONG hoặc SHORT chuẩn mới, app phát chuông bằng Web Audio và gọi rung bằng Vibration API nếu thiết bị hỗ trợ. BEST_EFFORT không hú chuông để tránh ép lệnh.
 - **Chỉ báo động một lần cho mỗi tín hiệu** theo ngày + hướng + nến 4H đã đóng. Những vòng quét 5 phút sau không hú lại cùng tín hiệu.
 - Có nút **Test chuông/rung** để kiểm tra điện thoại trước khi canh thật.
 - Có nút **Dừng báo động**. Báo động một lần cũng tự dừng sau khoảng 18 giây để giống một cuộc gọi/tin nhắn, không hú vô hạn.
-- Mỗi cảnh báo sẽ tạo **Giấy thử TP/SL giả lập**: giả định đã vào lệnh thành công tại giá Limit lúc báo động, rồi theo dõi TP/SL bằng giá last công khai ở các vòng quét sau.
+- Mỗi cảnh báo tín hiệu chuẩn sẽ tạo **Giấy thử TP/SL giả lập**: giả định đã vào lệnh thành công tại giá Limit lúc báo động, rồi theo dõi TP/SL bằng giá last công khai ở các vòng quét sau.
 
 Giới hạn thực tế:
 
@@ -138,7 +161,7 @@ Lưu ý: rewrite `/api/okx/*` hoạt động khi chạy qua Vercel. Khi chạy l
 
 ## Lịch sử và so sánh
 
-V1.2.2 giữ tab **LỊCH SỬ** từ V1.1. Mỗi ngày app lưu một bản ghi vào LocalStorage key `ftokx_simple_pwa_v1_history`.
+V1.2.4 giữ tab **LỊCH SỬ** từ V1.1. Mỗi ngày app lưu một bản ghi vào LocalStorage key `ftokx_simple_pwa_v1_history`.
 
 Thông tin lưu gồm:
 
@@ -179,21 +202,17 @@ Trong tab **LỊCH SỬ** có:
 
 LocalStorage có thể mất nếu xóa dữ liệu trình duyệt, đổi máy, đổi profile hoặc reset PWA. Nên export lịch sử định kỳ.
 
-## Có gì mới ở V1.2.2
+## Có gì mới ở V1.2.4
 
-- Nâng ngưỡng lập phiếu từ 5/8 lên 6/8.
-- 5/8 chuyển thành WATCH, không lập phiếu.
-- Thêm cấp tín hiệu VALID và STRONG.
-- Thêm bộ lọc BTC phải dẫn hướng tối thiểu 4/5 tiêu chí lõi.
-- Thêm vùng nhiễu sát EMA20: dưới 0.25% thì nghỉ.
-- Thêm kiểm tra độ dốc EMA50 trong 3 nến.
-- Thêm cooldown sau ngày lỗ: phải đạt 7/8 mới lập phiếu.
-- Thêm V3.3 safety gate: BTC ATR% từ 0.755% đến 3.0%, volume BTC phải hợp lệ, LONG cần nến BTC 4H đóng xanh.
-- Thêm Luôn Online Watch Mode: tự quét 5 phút khi app mở, giữ màn hình sáng nếu hỗ trợ, phát chuông/rung khi có tín hiệu.
-- Báo động một lần cho mỗi tín hiệu, không hú lặp mỗi 5 phút.
-- Thêm Log cảnh báo một lần.
-- Thêm Giấy thử TP/SL giả lập để kiểm tra hiệu quả tín hiệu khi chưa muốn vào lệnh thật.
-- Không tăng vốn khi tín hiệu mạnh.
+- Thêm **Overnight Relaxed Mode** tự bật từ 21:45 đến 23:59 theo giờ thiết bị.
+- Thêm cấp tín hiệu `OVERNIGHT_READY_LONG` và `OVERNIGHT_READY_SHORT`: score >= 6/8, gap >= 2, BTC core >= 4/5, EMA20 distance >= 0.25%, ATR/Volume hợp lệ.
+- Thêm **BEST_EFFORT OVERNIGHT TICKET**: sau 21:45 nếu không có tín hiệu chuẩn, app vẫn dựng 01 phiếu tham khảo tối ưu nhất có thể theo dữ liệu hiện tại.
+- BEST_EFFORT luôn gắn nhãn `NOT_RECOMMENDED`, giảm vốn còn 25 USDT/lệnh, bắt buộc TP/SL và không bắt buộc vào lệnh.
+- Thêm `NO_TRADE_LOCKED` cho hard veto: ATR ngoài vùng, volume lỗi, extreme candle hoặc cooldown sau ngày lỗ chưa đạt 8/8.
+- Thêm card `MORNING REVIEW` để nhắc sáng hôm sau ghi TP/SL/Không khớp/Tự đóng và lưu kết quả.
+- Giữ nguyên nguyên tắc: không auto trade, không private API, không tăng đòn bẩy, không đuổi giá, không có lệnh thứ 4.
+- Tăng service worker cache lên `ftokx-simple-pwa-v1.2.4`.
+
 
 ## Test
 
@@ -236,7 +255,7 @@ npm run validate
 - Online: cập nhật dữ liệu thị trường mới.
 - Offline: chỉ mở lại shell app và xem phiên đã lưu.
 - Service worker chỉ cache shell app, không cache dữ liệu OKX.
-- Cache version: `ftokx-simple-pwa-v1.2.2`.
+- Cache version: `ftokx-simple-pwa-v1.2.4`.
 
 Nếu thấy bản cũ:
 

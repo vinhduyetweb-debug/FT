@@ -28,7 +28,8 @@ const sourceFiles = [
   "service-worker.js",
   "vercel.json",
   "README.md",
-  "CHANGELOG.md"
+  "CHANGELOG.md",
+  "config/FTOKX_OVERNIGHT_RELAXED_CONFIG_V1_2_4.json"
 ];
 
 const errors = [];
@@ -135,9 +136,9 @@ async function main() {
   assert(!/\b\d+,\d{2,3}\b/.test(app), "Comma decimal trading price pattern found in app.js");
 
   assert(readme.includes("Cảnh báo"), "README warning section missing");
-  assert(app.includes('const APP_VERSION = "1.2.2"'), "App version must be 1.2.2");
-  assert(sw.includes('ftokx-simple-pwa-v1.2.2'), "Service worker cache version must be 1.2.2");
-  assert(changelog.includes("1.2.2"), "CHANGELOG missing version 1.2.2");
+  assert(app.includes('const APP_VERSION = "1.2.4"'), "App version must be 1.2.4");
+  assert(sw.includes('ftokx-simple-pwa-v1.2.4'), "Service worker cache version must be 1.2.4");
+  assert(changelog.includes("1.2.4"), "CHANGELOG missing version 1.2.4");
   assert(allText.includes("ftokx_simple_pwa_v1_history"), "History localStorage key missing");
   assert(html.includes("LỊCH SỬ"), "History tab missing");
   assert(allText.includes("Xuất lịch sử JSON"), "History export missing");
@@ -148,19 +149,31 @@ async function main() {
   assert(allText.includes("Kết quả ngày"), "Daily result panel missing");
   assert(allText.includes("Lưu kết quả ngày"), "Save daily result missing");
   assert(allText.includes("SIGNAL_CONFIG"), "Signal config missing");
-  assert(allText.includes("minTradeScore: 6"), "V1.2.2 min trade score must be 6");
-  assert(allText.includes("watchScore: 5"), "V1.2.2 watch score must be 5");
-  assert(allText.includes("strongScore: 7"), "V1.2.2 strong score must be 7");
-  assert(allText.includes("minDistanceFromEma20: 0.0025"), "V1.2.2 EMA20 noise filter missing");
-  assert(allText.includes("btcMustLead: true"), "V1.2.2 BTC lead filter missing");
-  assert(allText.includes("btcLeadMinScore: 4"), "V1.2.2 BTC core lead threshold missing");
-  assert(allText.includes("lossCooldownEnabled: true"), "V1.2.2 loss cooldown missing");
-  assert(allText.includes("lossCooldownMinScore: 7"), "V1.2.2 loss cooldown threshold missing");
-  assert(allText.includes("atrPctMin: 0.00755"), "V1.2.2 ATR min safety gate missing");
-  assert(allText.includes("atrPctMax: 0.03"), "V1.2.2 ATR max safety gate missing");
-  assert(allText.includes("requireVolumePositive: true"), "V1.2.2 volume sanity gate missing");
-  assert(allText.includes("longRequireGreenCandle: true"), "V1.2.2 LONG green candle gate missing");
-  assert(allText.includes("AUTO_WATCH_INTERVAL_MS = 5 * 60 * 1000"), "V1.2.2 five-minute watch interval missing");
+  assert(allText.includes("minTradeScore: 7"), "V1.2.4 optimized min trade score must be 7");
+  assert(allText.includes("watchScore: 5"), "V1.2.4 watch score must be 5");
+  assert(allText.includes("strongScore: 7"), "V1.2.4 strong score must be 7");
+  assert(allText.includes("extremeRangeMultiplier: 1.6"), "V1.2.4 optimized extreme range multiplier missing");
+  assert(allText.includes("minDistanceFromEma20: 0.004"), "V1.2.4 optimized EMA20 noise filter missing");
+  assert(allText.includes("btcMustLead: true"), "V1.2.4 BTC lead filter missing");
+  assert(allText.includes("btcLeadMinScore: 5"), "V1.2.4 optimized BTC core lead threshold missing");
+  assert(allText.includes("lossCooldownEnabled: true"), "V1.2.4 loss cooldown missing");
+  assert(allText.includes("lossCooldownMinScore: 8"), "V1.2.4 optimized loss cooldown threshold missing");
+  assert(allText.includes("atrPctMin: 0.01"), "V1.2.4 optimized ATR min safety gate missing");
+  assert(allText.includes("atrPctMax: 0.02"), "V1.2.4 optimized ATR max safety gate missing");
+  assert(allText.includes("requireVolumePositive: true"), "V1.2.4 volume sanity gate missing");
+  assert(allText.includes("longRequireGreenCandle: true"), "V1.2.4 LONG green candle gate missing");
+  assert(allText.includes("AUTO_WATCH_INTERVAL_MS = 5 * 60 * 1000"), "V1.2.4 five-minute watch interval missing");
+  assert(allText.includes("OVERNIGHT_CONFIG"), "V1.2.4 overnight config missing");
+  assert(allText.includes("startHour: 21") && allText.includes("startMinute: 45"), "V1.2.4 overnight start 21:45 missing");
+  assert(allText.includes("minTradeScore: 6"), "V1.2.4 overnight relaxed score 6 missing");
+  assert(allText.includes("btcLeadMinScore: 4"), "V1.2.4 overnight BTC core threshold 4 missing");
+  assert(allText.includes("minDistanceFromEma20: 0.0025"), "V1.2.4 overnight EMA20 distance 0.25% missing");
+  assert(allText.includes("bestEffortPositionRatio: 0.5"), "V1.2.4 BEST_EFFORT risk reduction missing");
+  assert(allText.includes("BEST_EFFORT") && allText.includes("NOT_RECOMMENDED"), "V1.2.4 BEST_EFFORT warning missing");
+  assert(allText.includes("NO_TRADE_LOCKED"), "V1.2.4 NO_TRADE_LOCKED missing");
+  assert(allText.includes("MORNING REVIEW"), "V1.2.4 Morning Review missing");
+  assert(allText.includes("OVERNIGHT_READY_LONG") && allText.includes("OVERNIGHT_READY_SHORT"), "V1.2.4 Overnight tiers missing");
+
   assert(html.includes("BẬT LUÔN ONLINE"), "Watch Mode start button missing");
   assert(html.includes("Test chuông/rung"), "Watch Mode test alert button missing");
   assert(html.includes("Dừng báo động"), "Watch Mode stop alert button missing");
@@ -182,11 +195,12 @@ async function main() {
   assert(!allText.includes("ALERT_MAX_MS"), "Old long alert max timer should not remain");
   assert(!allText.includes("api.telegram.org"), "Telegram endpoint must not be exposed in frontend");
   assert(!allText.includes("TELEGRAM_BOT_TOKEN"), "Telegram credential placeholder must not be shipped in frontend");
-  assert(allText.includes("WATCH"), "V1.2.2 WATCH tier missing");
-  assert(allText.includes("VALID_LONG") && allText.includes("VALID_SHORT"), "V1.2.2 VALID tiers missing");
-  assert(allText.includes("STRONG_LONG") && allText.includes("STRONG_SHORT"), "V1.2.2 STRONG tiers missing");
-  assert(allText.includes("EMA50 slope") || allText.includes("độ dốc EMA50"), "V1.2.2 EMA50 slope copy missing");
-  assert(allText.includes("không tăng vốn") || allText.includes("không tăng vốn".toUpperCase()), "V1.2.2 no size increase rule missing");
+  assert(allText.includes("WATCH"), "V1.2.4 WATCH tier missing");
+  assert(allText.includes("5–6/8") || allText.includes("5/8 hoặc 6/8"), "V1.2.4 watch 5-6/8 copy missing");
+  assert(allText.includes("VALID_LONG") && allText.includes("VALID_SHORT"), "V1.2.4 VALID tiers missing");
+  assert(allText.includes("STRONG_LONG") && allText.includes("STRONG_SHORT"), "V1.2.4 STRONG tiers missing");
+  assert(allText.includes("EMA50 slope") || allText.includes("độ dốc EMA50"), "V1.2.4 EMA50 slope copy missing");
+  assert(allText.includes("không tăng vốn") || allText.includes("không tăng vốn".toUpperCase()), "V1.2.4 no size increase rule missing");
   const apiKeyTerm = "API " + "key";
   assert(!allText.toLowerCase().includes(apiKeyTerm.toLowerCase()), "API credential wording found");
 
