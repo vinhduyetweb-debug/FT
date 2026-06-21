@@ -9,14 +9,14 @@
     <link rel="icon" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="stylesheet" href="/style.css" />
-    <title>FTOKX SIMPLE PWA V1.3</title>
+    <title>FTOKX SIMPLE PWA V1.3.1</title>
   </head>
   <body>
     <noscript>App cần bật JavaScript để cập nhật dữ liệu và lập phiếu.</noscript>
 
     <main class="app-shell" aria-live="polite">
       <header class="hero-card">
-        <div class="eyebrow">BTC 20X DISCIPLINE TICKET · V1.3.0</div>
+        <div class="eyebrow">BTC 20X DISCIPLINE TICKET · V1.3.1</div>
         <h1>FTOKX SIMPLE PWA</h1>
         <p class="guard-line">App chỉ lập phiếu. Người giữ tay.</p>
         <p class="guard-subline">Always Plan, Conditional Trade — luôn có kế hoạch, không ép xuống tiền.</p>
@@ -32,23 +32,28 @@
       </nav>
 
       <section id="todayView">
-        <section class="action-card">
+        <section class="action-card compact-action">
           <button id="refreshBtn" class="primary-btn" type="button">
-            CẬP NHẬT DỮ LIỆU &amp; LẬP PHIẾU
+            CẬP NHẬT &amp; LẬP PHIẾU BTC
           </button>
-          <button id="clearSessionBtn" class="ghost-btn" type="button">Xóa phiên hôm nay</button>
-          <div class="watch-card">
-            <div>
-              <strong>Luôn Online Watch Mode</strong>
-              <p id="watchStatus" class="muted-text">Chưa bật. Dùng điện thoại phụ: mở app, bật màn hình, cắm sạc nếu canh lâu.</p>
-            </div>
-            <div class="watch-actions">
-              <button id="watchToggleBtn" class="ghost-btn watch-main" type="button">BẬT LUÔN ONLINE</button>
-              <button id="testAlertBtn" class="ghost-btn" type="button">Test chuông/rung</button>
-              <button id="stopAlertBtn" class="ghost-btn danger" type="button">Dừng báo động</button>
-            </div>
+          <div class="quick-actions">
+            <button id="clearSessionBtn" class="ghost-btn" type="button">Xóa phiên hôm nay</button>
           </div>
-          <p class="install-hint">Bản V1.3 chỉ dùng BTC/USDT Futures, Isolated x20, Limit, không backend, không private API, không auto trade. App luôn dựng 01 kế hoạch có Fitness %, Grade A/B/C/D/F và Action: EXECUTABLE / WAIT_TRIGGER / PLAN_ONLY / LOCKED_RISK. Watch Mode chỉ hú khi EXECUTABLE; dữ liệu thị trường cần internet. Offline chỉ xem lại phiếu đã lưu.</p>
+          <details class="compact-details slim-details">
+            <summary>Watch Mode và ghi chú an toàn</summary>
+            <div class="watch-card">
+              <div>
+                <strong>Luôn Online Watch Mode</strong>
+                <p id="watchStatus" class="muted-text">Chưa bật. Dùng điện thoại phụ: mở app, bật màn hình, cắm sạc nếu canh lâu.</p>
+              </div>
+              <div class="watch-actions">
+                <button id="watchToggleBtn" class="ghost-btn watch-main" type="button">BẬT LUÔN ONLINE</button>
+                <button id="testAlertBtn" class="ghost-btn" type="button">Test chuông/rung</button>
+                <button id="stopAlertBtn" class="ghost-btn danger" type="button">Dừng báo động</button>
+              </div>
+            </div>
+            <p class="install-hint">Bản V1.3.1 chỉ dùng BTC/USDT Futures, Isolated x20, Limit, không backend, không private API, không auto trade. App luôn dựng 01 kế hoạch có Fitness %, Grade A/B/C/D/F và Action: EXECUTABLE / WAIT_TRIGGER / PLAN_ONLY / LOCKED_RISK. Watch Mode chỉ hú khi EXECUTABLE; dữ liệu thị trường cần internet. Offline chỉ xem lại phiếu đã lưu.</p>
+          </details>
         </section>
 
         <section id="messageArea" class="message-card hidden"></section>

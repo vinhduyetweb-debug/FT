@@ -67,7 +67,7 @@ async function main() {
   const packageJson = JSON.parse(await read("package.json"));
   const allText = (await Promise.all(sourceFiles.map(read))).join("\n");
 
-  assert(packageJson.version === "1.3.0", "package.json version must be 1.3.0");
+  assert(packageJson.version === "1.3.1", "package.json version must be 1.3.1");
   assert(manifest.name === "FTOKX SIMPLE PWA", "Manifest name must be FTOKX SIMPLE PWA");
   assert(manifest.short_name === "FTOKX", "Manifest short_name must be FTOKX");
   assert(manifest.start_url === "/", "Manifest start_url must be /");
@@ -83,9 +83,9 @@ async function main() {
     assert(info.size > 100, `${iconPath} looks empty`);
   }
 
-  assert(app.includes('const APP_VERSION = "1.3.0"'), "App version must be 1.3.0");
-  assert(sw.includes('ftokx-simple-pwa-v1.3.0'), "Service worker cache version must be 1.3.0");
-  assert(changelog.includes("1.3.0"), "CHANGELOG missing 1.3.0");
+  assert(app.includes('const APP_VERSION = "1.3.1"'), "App version must be 1.3.1");
+  assert(sw.includes('ftokx-simple-pwa-v1.3.1'), "Service worker cache version must be 1.3.1");
+  assert(changelog.includes("1.3.1"), "CHANGELOG missing 1.3.1");
   assert(readme.includes("BTC 20X Discipline Ticket"), "README missing V1.3 title");
 
   assert(app.includes("BTC-USDT-SWAP"), "Missing BTC-USDT-SWAP");
@@ -107,6 +107,10 @@ async function main() {
   assert(allText.includes("TP_SL_BY_GRADE"), "Grade-based TP/SL missing");
   assert(allText.includes("noChasePct: 0.0025"), "No Chase 0.25% missing");
   assert(allText.includes("Position notional") || allText.includes("positionUsdt"), "Position notional missing");
+  assert(allText.includes("VỊ THẾ ĐỀ XUẤT"), "Compact suggested position card missing");
+  assert(app.includes("function renderFocusTicket"), "renderFocusTicket function missing");
+  assert(allText.includes("compact-details"), "Collapsed compact details UI missing");
+  assert(html.includes("Watch Mode và ghi chú an toàn"), "Collapsed Watch Mode copy missing");
   assert(allText.includes("Morning Review") || allText.includes("MORNING REVIEW"), "Morning Review missing");
   assert(allText.includes("slogan") || allText.includes("Lão nhắc"), "Slogan logic/UI missing");
   assert(allText.includes("Không dời SL"), "No SL moving warning missing");
@@ -170,7 +174,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("VALIDATION PASSED: FTOKX SIMPLE PWA V1.3 BTC 20X Discipline Ticket package looks safe.");
+  console.log("VALIDATION PASSED: FTOKX SIMPLE PWA V1.3.1 BTC 20X Compact Focus package looks safe.");
 }
 
 main().catch((error) => {

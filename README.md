@@ -1,10 +1,18 @@
-# FTOKX SIMPLE PWA V1.3 — BTC 20X Discipline Ticket
+# FTOKX SIMPLE PWA V1.3.1 — BTC 20X Discipline Ticket
 
 App PWA tĩnh HTML/CSS/JS dùng dữ liệu thị trường công khai OKX để lập phiếu futures thủ công cho **BTC/USDT**.
 
-Triết lý V1.3:
+Triết lý V1.3.1:
 
 > Always Plan, Conditional Trade — mở app lúc nào cũng có kế hoạch, nhưng không phải kế hoạch nào cũng đáng xuống tiền.
+
+
+## Điểm mới V1.3.1
+
+- Giao diện mặc định gọn hơn, không dàn quá nhiều nội dung ra màn hình chính.
+- Khối đầu tiên luôn hiện **VỊ THẾ ĐỀ XUẤT**: hướng LONG/SHORT, vị thế, ký quỹ ước tính, Limit, Entry Zone, TP, SL, No Chase và R:R.
+- Các phần cần đọc sâu như lý do, bảng phiếu đầy đủ, rủi ro, theo dõi thủ công, Morning Review và kỹ thuật 4H được thu gọn bằng mục mở rộng.
+- Watch Mode và ghi chú an toàn cũng được thu gọn để app tập trung vào phiếu chính.
 
 ## Cảnh báo
 

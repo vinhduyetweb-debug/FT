@@ -1,4 +1,4 @@
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 const SESSION_KEY = "ftokx_simple_pwa_v1_session";
 const SETTINGS_KEY = "ftokx_simple_pwa_v1_settings";
 const HISTORY_KEY = "ftokx_simple_pwa_v1_history";
@@ -897,30 +897,46 @@ function renderTicket(session) {
   const actionTime = formatTime(session.reviewAt);
   const decisionClass = getDecisionClass(session);
   const order = session.orders[0];
+  const paperPanel = renderPaperTestPanel(session);
   els.ticketArea.innerHTML = `
-    <section class="ticket-card decision ${session.action === "LOCKED_RISK" ? "locked-card" : ""}">
-      <div class="decision-word ${decisionClass}">${escapeHtml(session.decision)} · ${escapeHtml(session.action)}</div>
-      <div class="fitness-row">
+    <section class="ticket-card decision compact-ticket ${session.action === "LOCKED_RISK" ? "locked-card" : ""}">
+      <div class="compact-headline">
+        <span class="signal-tier">${escapeHtml(SYMBOL_CONFIG.label)} · Isolated x${escapeHtml(TRADING_CONFIG.leverage)} · Limit</span>
+        <span class="grade-badge grade-${escapeHtml(session.grade)}">Grade ${escapeHtml(session.grade)} · ${escapeHtml(session.fitness)}%</span>
+      </div>
+
+      <div class="decision-compact">
+        <div>
+          <div class="decision-word compact ${decisionClass}">${escapeHtml(session.decision)}</div>
+          <p class="reason">${escapeHtml(session.actionLabel)} · ${escapeHtml(session.marketRegime)}</p>
+        </div>
+        <div class="action-chip">${escapeHtml(session.action)}</div>
+      </div>
+
+      <div class="fitness-row compact-meter">
         <div class="fitness-meter" aria-label="Fitness ${session.fitness}%"><span style="width:${escapeHtml(session.fitness)}%"></span></div>
         <strong>${escapeHtml(session.fitness)}%</strong>
-        <span class="grade-badge grade-${escapeHtml(session.grade)}">Grade ${escapeHtml(session.grade)}</span>
       </div>
-      <p class="signal-tier">${escapeHtml(session.actionLabel)} · ${escapeHtml(session.marketRegime)}</p>
-      <p class="reason">Lý do: ${escapeHtml(session.reason)}</p>
+
+      ${renderFocusTicket(session, order)}
       ${renderSloganBox(session)}
       ${renderRiskWarning(session)}
-      <h3>VIỆC LÀM NGAY</h3>
-      <ol class="steps">
-        <li>Chỉ dùng ${escapeHtml(SYMBOL_CONFIG.label)} Futures, ký quỹ cô lập, x${escapeHtml(TRADING_CONFIG.leverage)}.</li>
-        <li>Nếu action là EXECUTABLE: chỉ nhập Limit đúng vùng entry, không Market.</li>
-        <li>Nếu action là WAIT_TRIGGER: chờ giá về vùng, không chase.</li>
-        <li>Nếu action là PLAN_ONLY hoặc LOCKED_RISK: xem kế hoạch, ưu tiên không xuống tiền.</li>
-        <li>Chờ đến ${escapeHtml(actionTime)}. Không khớp thì hủy. Không dời SL.</li>
-      </ol>
+
+      <details class="compact-details">
+        <summary>Vì sao app đề xuất như vậy?</summary>
+        <p class="reason">Lý do: ${escapeHtml(session.reason)}</p>
+        <ol class="steps">
+          <li>Chỉ dùng ${escapeHtml(SYMBOL_CONFIG.label)} Futures, ký quỹ cô lập, x${escapeHtml(TRADING_CONFIG.leverage)}.</li>
+          <li>EXECUTABLE: có thể xem xét nhập Limit đúng vùng, không Market.</li>
+          <li>WAIT_TRIGGER: chờ giá về vùng, không chase.</li>
+          <li>PLAN_ONLY hoặc LOCKED_RISK: có bản đồ để nhìn, ưu tiên không xuống tiền.</li>
+          <li>Chờ đến ${escapeHtml(actionTime)}. Không khớp thì hủy. Không dời SL.</li>
+        </ol>
+      </details>
     </section>
 
-    <section class="panel">
-      <h3>PHIẾU BTC/USDT 20X</h3>
+    <details class="panel compact-details">
+      <summary>Phiếu BTC/USDT 20X đầy đủ</summary>
       <div class="table-wrap">
         <table>
           <thead>
@@ -940,10 +956,10 @@ function renderTicket(session) {
         </table>
       </div>
       <p class="muted-text">No Chase: nếu giá đã vượt vùng bất lợi quá ${escapeHtml(session.rules.noChasePct)}% so với Limit, phiếu hết hiệu lực. Giá chạy mất thì để nó chạy.</p>
-    </section>
+    </details>
 
-    <section class="panel">
-      <h3>RỦI RO ƯỚC TÍNH</h3>
+    <details class="panel compact-details">
+      <summary>Rủi ro ước tính</summary>
       <div class="risk-grid">
         <div class="metric"><span>Position notional</span><strong>${escapeHtml(order.positionUsdt)} USDT</strong></div>
         <div class="metric"><span>Ký quỹ ước tính</span><strong>${escapeHtml(order.marginUsdt)} USDT</strong></div>
@@ -953,21 +969,61 @@ function renderTicket(session) {
         <div class="metric"><span>Phí ước tính</span><strong>${escapeHtml(order.feeEstimate)} USDT</strong></div>
       </div>
       <p class="muted-text">20x không tha lỗi dời SL. Không DCA futures. Không martingale. Không tăng size sau lỗ.</p>
-    </section>
+    </details>
 
-    <section class="panel">
-      <h3>Theo dõi thủ công</h3>
+    <details class="panel compact-details">
+      <summary>Theo dõi thủ công</summary>
       <div class="follow-grid">${renderFollowRow(order, 0)}</div>
-    </section>
+    </details>
 
-    ${renderMorningReviewPanel(session)}
-    ${renderPaperTestPanel(session)}
-    ${renderDayResultPanel(session)}
+    <details class="panel compact-details">
+      <summary>Morning Review / ghi kết quả sáng hôm sau</summary>
+      ${renderMorningReviewPanel(session)}
+      ${renderDayResultPanel(session)}
+    </details>
+
+    ${paperPanel ? `<details class="panel compact-details"><summary>Giấy thử TP/SL</summary>${paperPanel}</details>` : ""}
     ${renderScoreDetails(session)}
   `;
 
   bindStatusButtons();
   bindDayResultControls();
+}
+
+function renderFocusTicket(session, order) {
+  const canTrade = Number(order.positionUsdt) > 0 && session.action !== "LOCKED_RISK";
+  const posture = session.action === "EXECUTABLE"
+    ? "CÓ THỂ XEM XÉT VÀO LIMIT"
+    : session.action === "WAIT_TRIGGER"
+      ? "CHỜ TRIGGER, CHƯA CHASE"
+      : session.action === "PLAN_ONLY"
+        ? "PHIẾU YẾU, ƯU TIÊN CHỈ NHÌN"
+        : "KHÓA RỦI RO, KHÔNG VÀO";
+  const sizeLine = canTrade
+    ? `${order.positionUsdt} USDT notional · ký quỹ khoảng ${order.marginUsdt} USDT`
+    : `0 USDT · không mở vị thế thật`;
+
+  return `
+    <div class="focus-ticket ${canTrade ? "" : "focus-ticket-muted"}">
+      <div class="focus-title">
+        <span>VỊ THẾ ĐỀ XUẤT</span>
+        <strong>${escapeHtml(posture)}</strong>
+      </div>
+      <div class="focus-grid">
+        <div class="focus-main ${session.decision === "LONG" ? "decision-long" : "decision-short"}">
+          ${escapeHtml(order.direction)}
+        </div>
+        <div class="focus-metric"><span>Vị thế</span><strong>${escapeHtml(sizeLine)}</strong></div>
+        <div class="focus-metric"><span>Limit</span><strong>${escapeHtml(order.entry)}</strong></div>
+        <div class="focus-metric"><span>Entry zone</span><strong>${escapeHtml(order.entryZone)}</strong></div>
+        <div class="focus-metric"><span>TP</span><strong class="win">${escapeHtml(order.tp)} · ${escapeHtml(order.tpPct)}</strong></div>
+        <div class="focus-metric"><span>SL</span><strong class="loss">${escapeHtml(order.sl)} · ${escapeHtml(order.slPct)}</strong></div>
+        <div class="focus-metric"><span>No chase sau</span><strong>${escapeHtml(order.invalidPrice)}</strong></div>
+        <div class="focus-metric"><span>R:R</span><strong>${escapeHtml(order.rr)}R</strong></div>
+      </div>
+      <p class="focus-note">${canTrade ? "Nhập tay trên OKX nếu ông chấp nhận rủi ro; không phải lệnh tự động." : "App vẫn cho kế hoạch để nhìn thị trường, nhưng mặc định không xuống tiền."}</p>
+    </div>
+  `;
 }
 
 function getDecisionClass(session) {

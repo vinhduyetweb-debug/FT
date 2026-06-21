@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1 — 2026-06-21
+
+- Compact Focus UI: giao diện mặc định gọn hơn, ưu tiên nhìn ngay vị thế đề xuất.
+- Thêm khối **VỊ THẾ ĐỀ XUẤT** ở đầu phiếu: LONG/SHORT, size, margin ước tính, Limit, Entry Zone, TP, SL, No Chase và R:R.
+- Gom phần giải thích, bảng chi tiết, rủi ro, theo dõi thủ công, Morning Review và kỹ thuật 4H vào các mục mở rộng `details`.
+- Rút gọn action area: nút cập nhật là trọng tâm; Watch Mode và ghi chú an toàn mặc định thu gọn.
+- Giữ nguyên logic an toàn V1.3.0: BTC/USDT only, Isolated x20, no backend, no private API, no auto trade.
+- Tăng service worker cache lên `ftokx-simple-pwa-v1.3.1`.
+
 ## 1.3.0 — 2026-06-21
 
 - Chuyển sản phẩm sang **BTC 20X Discipline Ticket**.
