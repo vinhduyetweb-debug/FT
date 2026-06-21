@@ -1,14 +1,14 @@
 # Changelog
 
-## 1.3.3 — 2026-06-21
+## 1.3.5 — 2026-06-21
 
-- Thêm **ATR Smart TP/SL** để tránh bộ TP/SL quá chặt với BTC/USDT x20.
-- Cập nhật TP/SL theo Grade: A 1.20/0.60, B 1.00/0.50, C 0.80/0.45, D 0.60/0.40, F 0.50/0.35.
-- Nếu ATR 4H trong vùng cao nhưng còn hợp lệ, app nới TP/SL có kiểm soát; nếu ATR quá thấp/quá cao vẫn `LOCKED_RISK`.
-- Thêm mục **Thiết lập vốn futures** để nhập quỹ futures kế hoạch và ký quỹ mỗi lệnh, mặc định 100 USDT / 50 USDT.
-- Khối **VỊ THẾ ĐỀ XUẤT** hiển thị thêm TP/SL mode và tác động lên quỹ futures.
-- Bảng phiếu đầy đủ thêm TP/SL mode; phần rủi ro ước tính thêm quỹ futures và tác động nếu TP/SL.
-- Cập nhật README, config, validator và service worker cache lên `ftokx-simple-pwa-v1.3.3`.
+- Thêm **Kill Switch & Capital Guard**.
+- Thêm thiết lập local: quỹ futures, margin/lệnh, Daily Max Loss và One Trade Per Day.
+- Hard veto mới: khóa khi margin lớn hơn quỹ futures, hôm nay đã dùng một lệnh, chạm Daily Max Loss, hoặc Grade yếu trong khi margin chiếm quá lớn quỹ.
+- Thêm nút **Copy phiếu OKX** trong khu VỊ THẾ ĐỀ XUẤT.
+- Phiếu copy gồm BTC/USDT Isolated x20, hướng, margin, vị thế danh nghĩa, Limit, Entry Zone, TP1, TP2, SL, No Chase và PnL kế hoạch.
+- Rủi ro ước tính hiển thị % margin dùng trên quỹ futures và % lỗ SL so với quỹ futures.
+- Cập nhật README, config, validator và service worker cache lên `ftokx-simple-pwa-v1.3.5`.
 
 ## 1.3.2 — 2026-06-21
 
