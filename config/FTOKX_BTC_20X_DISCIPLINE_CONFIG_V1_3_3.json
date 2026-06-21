@@ -1,0 +1,41 @@
+{
+  "version": "1.3.3",
+  "name": "FTOKX SIMPLE PWA — BTC 20X Discipline Ticket",
+  "mode": "ATR Smart TP/SL",
+  "symbol": "BTCUSDT",
+  "instId": "BTC-USDT-SWAP",
+  "marginMode": "Isolated / Cô lập",
+  "leverage": 20,
+  "orderType": "Limit",
+  "defaultMarginUsdt": 50,
+  "defaultFuturesCapitalUsdt": 100,
+  "referenceCapitalRangeUsdt": [50, 100],
+  "notionalAtDefault": 1000,
+  "noChasePct": 0.25,
+  "waitMinutes": 20,
+  "tpSlByGrade": {
+    "A": { "tpPct": 1.2, "slPct": 0.6, "rrBeforeFee": 2.0 },
+    "B": { "tpPct": 1.0, "slPct": 0.5, "rrBeforeFee": 2.0 },
+    "C": { "tpPct": 0.8, "slPct": 0.45, "rrBeforeFee": 1.78 },
+    "D": { "tpPct": 0.6, "slPct": 0.4, "rrBeforeFee": 1.5 },
+    "F": { "tpPct": 0.5, "slPct": 0.35, "rrBeforeFee": 1.43 }
+  },
+  "atrSmartRules": {
+    "validAtrPctRange": [1.0, 2.0],
+    "normalAtrPctRange": [1.0, 1.5],
+    "highAtrPctRange": [1.5, 2.0],
+    "highAtrTpBoostPct": 0.2,
+    "highAtrSlBoostPct": 0.1,
+    "maxTpPct": 1.2,
+    "maxSlPct": 0.6
+  },
+  "riskRules": [
+    "No private API",
+    "No auto trade",
+    "No backend",
+    "No DCA futures",
+    "No martingale",
+    "No moving SL",
+    "Do not use Tangem BTC or monthly BTC DCA money to rescue futures"
+  ]
+}

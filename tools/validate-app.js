@@ -67,7 +67,7 @@ async function main() {
   const packageJson = JSON.parse(await read("package.json"));
   const allText = (await Promise.all(sourceFiles.map(read))).join("\n");
 
-  assert(packageJson.version === "1.3.2", "package.json version must be 1.3.2");
+  assert(packageJson.version === "1.3.3", "package.json version must be 1.3.3");
   assert(manifest.name === "FTOKX SIMPLE PWA", "Manifest name must be FTOKX SIMPLE PWA");
   assert(manifest.short_name === "FTOKX", "Manifest short_name must be FTOKX");
   assert(manifest.start_url === "/", "Manifest start_url must be /");
@@ -83,9 +83,9 @@ async function main() {
     assert(info.size > 100, `${iconPath} looks empty`);
   }
 
-  assert(app.includes('const APP_VERSION = "1.3.2"'), "App version must be 1.3.2");
-  assert(sw.includes('ftokx-simple-pwa-v1.3.2'), "Service worker cache version must be 1.3.2");
-  assert(changelog.includes("1.3.2"), "CHANGELOG missing 1.3.2");
+  assert(app.includes('const APP_VERSION = "1.3.3"'), "App version must be 1.3.3");
+  assert(sw.includes('ftokx-simple-pwa-v1.3.3'), "Service worker cache version must be 1.3.3");
+  assert(changelog.includes("1.3.3"), "CHANGELOG missing 1.3.3");
   assert(readme.includes("BTC 20X Discipline Ticket"), "README missing V1.3 title");
 
   assert(app.includes("BTC-USDT-SWAP"), "Missing BTC-USDT-SWAP");
@@ -105,10 +105,14 @@ async function main() {
   assert(allText.includes("Fitness") && allText.includes("Grade"), "Fitness/Grade UI missing");
   assert(allText.includes("MARGIN_BY_GRADE"), "Grade-based margin sizing missing");
   assert(allText.includes("TP_SL_BY_GRADE"), "Grade-based TP/SL missing");
+  assert(app.includes("A: { tp: 0.012, sl: 0.006 }") && app.includes("B: { tp: 0.01, sl: 0.005 }") && app.includes("D: { tp: 0.006, sl: 0.004 }"), "V1.3.3 TP/SL table mismatch");
   assert(allText.includes("noChasePct: 0.0025"), "No Chase 0.25% missing");
   assert(allText.includes("Vị thế danh nghĩa x20") || allText.includes("notionalUsdt"), "Notional x20 display missing");
   assert(allText.includes("Vốn ký quỹ") || allText.includes("marginUsdt"), "Default margin display missing");
   assert(allText.includes("Lãi nếu TP") && allText.includes("Lỗ nếu SL"), "TP/SL PnL display missing");
+  assert(allText.includes("ATR Smart") && app.includes("ATR_TP_SL_RULES"), "ATR Smart TP/SL missing");
+  assert(app.includes("getTpSlParams"), "getTpSlParams function missing");
+  assert(html.includes("futuresCapitalInput") && html.includes("marginInput"), "Futures capital sizing inputs missing");
   assert(app.includes("defaultMarginUsdt: 50"), "Default 50 USDT margin missing");
   assert(app.includes("referenceCapitalMinUsdt: 50") && app.includes("referenceCapitalMaxUsdt: 100"), "50-100 USDT capital reference missing");
   assert(allText.includes("VỊ THẾ ĐỀ XUẤT"), "Compact suggested position card missing");
@@ -178,7 +182,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("VALIDATION PASSED: FTOKX SIMPLE PWA V1.3.2 default 50 USDT margin PnL package looks safe.");
+  console.log("VALIDATION PASSED: FTOKX SIMPLE PWA V1.3.3 ATR Smart TP/SL package looks safe.");
 }
 
 main().catch((error) => {

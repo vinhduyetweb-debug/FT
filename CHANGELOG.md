@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.3 — 2026-06-21
+
+- Thêm **ATR Smart TP/SL** để tránh bộ TP/SL quá chặt với BTC/USDT x20.
+- Cập nhật TP/SL theo Grade: A 1.20/0.60, B 1.00/0.50, C 0.80/0.45, D 0.60/0.40, F 0.50/0.35.
+- Nếu ATR 4H trong vùng cao nhưng còn hợp lệ, app nới TP/SL có kiểm soát; nếu ATR quá thấp/quá cao vẫn `LOCKED_RISK`.
+- Thêm mục **Thiết lập vốn futures** để nhập quỹ futures kế hoạch và ký quỹ mỗi lệnh, mặc định 100 USDT / 50 USDT.
+- Khối **VỊ THẾ ĐỀ XUẤT** hiển thị thêm TP/SL mode và tác động lên quỹ futures.
+- Bảng phiếu đầy đủ thêm TP/SL mode; phần rủi ro ước tính thêm quỹ futures và tác động nếu TP/SL.
+- Cập nhật README, config, validator và service worker cache lên `ftokx-simple-pwa-v1.3.3`.
+
 ## 1.3.2 — 2026-06-21
 
 - Đổi cách hiểu vị thế theo thực tế sử dụng: mặc định **vốn ký quỹ 50 USDT/lệnh**.

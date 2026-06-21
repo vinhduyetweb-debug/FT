@@ -925,3 +925,17 @@ small {
     font-size: clamp(36px, 14vw, 70px);
   }
 }
+
+.compact-form {
+  margin-top: 12px;
+}
+
+.sizing-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sizing-actions .ghost-btn {
+  width: fit-content;
+}
