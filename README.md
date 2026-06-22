@@ -1,35 +1,48 @@
-# FTOKX SIMPLE PWA V2.0 FINAL — Futures Discipline OS
+# FTOKX SIMPLE PWA V2.1 CONFIG180 WATCHLIST
 
-PWA tĩnh HTML/CSS/JS dùng dữ liệu public OKX để lập phiếu thủ công BTC/USDT Futures. App không đặt lệnh, không đọc tài khoản, không private API, không auto trade, không backend.
+PWA tĩnh HTML/CSS/JS dùng dữ liệu public OKX để soi BTC/USDT-SWAP theo bộ tham chiếu **LÃO SHORT TREND V1.4.2 — WATCHLIST CONFIG 180**.
+
+App không đặt lệnh, không đọc tài khoản, không private API, không auto trade, không backend. Bản này mặc định **WATCHLIST / OBSERVATION_ONLY / NO_LIVE** để kiểm chứng thêm bộ thông số backtest trước khi dùng thật.
 
 ## Tinh thần
 
-Always Plan, Conditional Trade. App luôn dựng kế hoạch để nhìn thị trường, nhưng không ép xuống tiền. BTC là kho thóc; futures chỉ là xưởng phụ.
+Backtest chỉ là bộ lọc. App này giúp ông mở lên là biết: thị trường có đang đúng cửa SHORT Trend hay không, nếu khớp thì ghi paper/watchlist, nếu không khớp thì khóa tay.
 
-## V2.0 FINAL có gì
+## Bộ thông số V2.1 CONFIG180
 
-- Command Center UI: LONG/SHORT/LOCKED, Fitness, Grade, Limit, TP1, TP2, SL, lãi/lỗ, Copy OKX.
-- Market Regime Pro: Trend Up, Trend Down, Range, Chop, Expansion.
-- Session Quality: đánh giá giờ giao dịch; sau 23:30 siết mạnh nếu không phải Grade A.
-- Pre-Trade Contract: bắt tick cam kết trước khi đánh dấu `Đã đặt Limit`.
-- Capital Ladder: hiển thị margin hiện tại và margin Lão khuyến nghị.
-- Mistake Counter: đếm lỗi kỷ luật như chase, Market, dời SL, vào lại sau SL, DCA futures.
-- Weekly Review & BTC Sweep: gợi ý quét một phần lợi nhuận futures sang BTC.
-- Paper Mode: lưu cài đặt chế độ ưu tiên giấy thử trước khi dùng tiền thật.
-- Kill Switch & Capital Guard: One Trade Per Day, Daily Max Loss, Weekly Max Loss, Futures Fund Guard.
+- Pair: BTC/USDT-SWAP
+- Signal TF: 4H closed candles only
+- Execution TF: 15M
+- Direction: SHORT only
+- Position notional: 500 USD
+- Leverage: x5
+- Margin required: 100 USDT
+- Mode: Isolated
+- Regime: Trend Down only
+- Grade: A only
+- Min Fitness: 92
+- ATR: 0.6% đến 2.0%
+- EMA20 distance: 1.0% đến 2.8%
+- No Chase: 0.15%
+- TP1: 0.70%
+- TP2: 0.70%
+- SL: 0.30%
+- Expiry: 12 nến 15M / 180 phút
+- Daily Max Loss: 3 USDT
+- One Trade Per Day: ON
+- Kill Switch: ON
+- Volume Filter: ON
 
-## Mặc định
+## Nâng cấp chính so với V2.0
 
-- Cặp: BTC/USDT Futures
-- Margin mode: Isolated / Cô lập
-- Leverage: x20
-- Margin mỗi lệnh: 50 USDT
-- Quỹ futures tham chiếu: 100 USDT
-- Daily Max Loss: 6 USDT
-- Weekly Max Loss: 15 USDT
-- TP1: chốt 50% vị thế
-- TP2: chốt phần còn lại
-- Sau TP1: gợi ý dời SL về hòa vốn
+- Chuyển từ BTC x20 hai chiều sang **SHORT-only x5 Config 180**.
+- Thêm `STRATEGY_PROFILE` trong `app.js` để khóa cấu hình vào một hồ sơ rõ ràng.
+- Mặc định **Paper Mode / NO_LIVE**; khi setup đẹp sẽ hiện `WATCHLIST_HIT`, không khuyến nghị vào live.
+- Siết bộ lọc: Trend Down, Grade A, Fitness ≥ 92, ATR 0.6–2.0%, EMA20 distance 1.0–2.8%, volume ratio ≥ 0.8x.
+- Cập nhật vốn: margin/lệnh 100 USDT, notional 500 USD, Daily Max Loss 3 USDT.
+- Cập nhật TP/SL: TP1 0.70%, TP2 0.70%, SL 0.30%.
+- Cập nhật PWA cache name lên `ftokx-simple-pwa-v2.1.0-config180`.
+- Giữ nguyên localStorage key cũ để không phá lịch sử.
 
 ## Chạy local
 
@@ -38,7 +51,7 @@ npm run check
 npm run validate
 ```
 
-Có thể mở trực tiếp `index.html`, hoặc deploy lên Vercel/GitHub Pages.
+Có thể mở trực tiếp `index.html` để xem shell và lịch sử local. Dữ liệu live OKX cần deploy có rewrite `/api/okx/*` như trong `vercel.json`.
 
 ## Deploy Vercel qua GitHub
 
@@ -47,7 +60,7 @@ npm run check
 npm run validate
 git status
 git add .
-git commit -m "Release V2.0 Final Futures Discipline OS"
+git commit -m "Release V2.1 Config180 Watchlist"
 git push origin main
 ```
 
@@ -66,14 +79,16 @@ App lưu dữ liệu local trên máy bằng localStorage:
 - `ftokx_simple_pwa_v1_history`
 - `ftokx_simple_pwa_v1_alert_log`
 - `ftokx_simple_pwa_v1_paper_tests`
+- `ftokx_simple_pwa_v2_pretrade_contract`
 
-Giữ key cũ để không phá dữ liệu V1.x.
+Giữ key cũ để không phá dữ liệu V1/V2.0. Khi mở V2.1 lần đầu, settings được migrate sang profile Config 180.
 
 ## Giới hạn
 
-- Không phải bot tự động.
+- Đây là app quan sát, không phải bot giao dịch.
+- Bộ Config 180 lấy từ backtest tham chiếu, chưa được xác nhận hoàn hảo.
 - Không bảo đảm lợi nhuận.
-- Không thay người dùng đặt SL/TP trên OKX.
-- Dữ liệu OKX public có thể lỗi/chậm; khi dữ liệu không sạch, app sẽ khóa rủi ro.
+- App không tự biết tài khoản OKX, margin thật, liquidation thật.
+- Nếu OKX public API lỗi/chậm, app sẽ khóa rủi ro.
 
-Slogan: App tốt không cho nhiều lệnh hơn; app tốt giữ tay lâu hơn.
+Slogan: Bộ lọc tốt không làm ta nóng tay; nó bắt ta chờ đúng cửa.
